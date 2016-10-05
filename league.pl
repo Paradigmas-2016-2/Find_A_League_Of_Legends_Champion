@@ -26,59 +26,59 @@ play :-	write('Welcome to summoner\'s rift '), nl, nl, nl,
 % find_champion(R) :- champion(X,_,_,_,_,_,R), write(X).
 
 
-% campeao(Nome, Primario, Dano, Resistencia, Controle, EstiloDano, Dificuldade)
 % usa habilidades
 % EstiloDano 0 - 100, sendo 0 um campeão que só usa ataque básico e 100 que só
+% campeao(Nome, Primario, Dano, Resistencia, Controle, EstiloDano, Dificuldade, Honra)
 
-champion(ashe, marksman, 2, 1, 3, 20, 1).
-champion(corki, marksman, 3, 0, 1, 45, 2).
-champion(kalista, marksman, 3, 0, 1, 10, 3).
+champion(ashe, marksman, 2, 1, 3, 20, 1, justice).
+champion(corki, marksman, 3, 0, 1, 45, 2, justice).
+champion(kalista, marksman, 3, 0, 1, 10, 3, strength).
 
-champion(amumu, vanguard, 2, 3, 3, 90, 1).
-champion(shaco, assassin, 3, 0, 2, 45, 2).
-champion('lee sin', diver, 3, 2, 2, 55, 3).
+champion(amumu, vanguard, 2, 3, 3, 90, 1, neutral).
+champion(shaco, assassin, 3, 0, 2, 45, 2, strength).
+champion('lee sin', diver, 3, 2, 2, 55, 3, justice).
 
-champion(janna, enchanter, 1, 0 , 3, 100, 1).
-champion(lulu, enchanter, 2, 0, 2, 80, 2).
-champion(thresh, warden, 1, 2, 3, 75, 3).
+champion(janna, enchanter, 1, 0 , 3, 100, 1, justice).
+champion(lulu, enchanter, 2, 0, 2, 80, 2, neutral).
+champion(thresh, warden, 1, 2, 3, 75, 3, strength).
 
-% Malphite, Shen
-tank(X) :- champion(X, vanguard, _, _, _, _, _);
-           champion(X, warden, _, _, _, _, _).
+% Vanguard: starter, ex: Malphite
+% Warden: protect ex: Shen
 
-% Nasus, Xin Zhao
-fighter(X) :- champion(X, juggernaut, _, _, _, _, _);
-              champion(X, diver, _, _, _, _, _).
+tank(X) :- champion(X, vanguard, _, _, _, _, _,_);
+           champion(X, warden, _, _, _, _, _,_).
 
-% Zed, Fiora
-slayer(X) :- champion(X, assassins, _, _, _, _, _);
-             champion(X, skirmisher, _, _, _, _, _).
+% Juggernaut: more tank than damage ex: Nasus
+% Diver: more damage than tank ex: Xin Zhao
 
-% Veigar, Vladimir, Ziggs
-mage(X) :- champion(X, burst, _, _, _, _, _);
-           champion(X, battle, _, _, _, _, _);
-           champion(X, artillery, _, _, _, _, _).
+fighter(X) :- champion(X, juggernaut, _, _, _, _, _,_);
+              champion(X, diver, _, _, _, _, _,_).
 
-% lulu, Zyra
-controller(X) :- champion(X, enchanter, _, _, _, _, _);
-                 champion(X, disruptor, _, _, _, _, _).
+% Assassin: have high mobility, escape and burst damage ex: Zed
+% Skirmisher: don't have escape but have burst damage ex: Fiora
 
-% Ashe
-marksman(X) :- champion(X, marksman, _, _, _, _, _).
+slayer(X) :- champion(X, assassins, _, _, _, _, _,_);
+             champion(X, skirmisher, _, _, _, _, _,_).
 
+% Burst: have only burst damage ex: Veigar
+% Battle: have some tons of damage, and have a average resistence ex: Vladimir
+% Artillery: have so much damage in poke ex: Ziggs
 
-% Precisa adicionar o atributo cidade em todos os lugares onde tem champion
-% para poder usuar
-% strength(X) :-  champion(_, _, _, _, _, _, _, bilgewater),
-%                 champion(_, _, _, _, _, _, _, noxus),
-%                 champion(_, _, _, _, _, _, _, shurima),
-%                 champion(_, _, _, _, _, _, _, zaun).
-%
-% justice(X) :- champion(_, _, _, _, _, _, _, demacia)
-%               champion(_, _, _, _, _, _, _, 'bundle city')
-%               champion(_, _, _, _, _, _, _, freljord)
-%               champion(_, _, _, _, _, _, _, piltover).
-%
-% neutral(X) :- champion(_, _, _, _, _, _, _, ionia),
-%               champion(_, _, _, _, _, _, _, 'mount targon'),
-%               champion(_, _, _, _, _, _, _, 'shadow isles').
+mage(X) :- champion(X, burst, _, _, _, _, _,_);
+           champion(X, battle, _, _, _, _, _,_);
+           champion(X, artillery, _, _, _, _, _,_).
+
+% Enchanter: controllers that amplify allies ex: lulu
+% Disruptor: controllers that snared enemies ex: Zyra
+controller(X) :- champion(X, enchanter, _, _, _, _, _,_);
+                 champion(X, disruptor, _, _, _, _, _,_).
+
+% Marksman: Champions that have a lot of damaged, and have so much range ex: Ashe
+
+marksman(X) :- champion(X, marksman, _, _, _, _, _,_).
+
+% Type of Honor
+
+strength(X) :-  champion(X, _, _, _, _, _, _, strength).
+justice(X) :- champion(X, _, _, _, _, _, _, justice).
+neutral(X) :- champion(X, _, _, _, _, _, _, neutral).
