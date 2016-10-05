@@ -12,68 +12,52 @@ set(ID, [X|Rest]) :- set(ID, X), set(ID, Rest).
 get(ID, R) :- findall(X, profile(ID, X), R).
 drop(ID) :- retractall(profile(ID, _)).
 
-play :-	write('Welcome to summoner\'s rift '), nl, nl, nl,
-  write('We\'ll try to find the perfect champion for you.'), nl,
-  write('First,'), nl,
-  write('How experienced are you with league of legends?'), nl,
-  write('1 - Beginner, 2 - Average, 3 - Experienced'), nl,
-  read(Alternative),
-  profile:set(1, [experience(Alternative)]), nl, nl, nl,
-  next_step_type(1).
-
-%----------------------%
-% next_step_exp(1) :- write('What is your type of game?'), nl,
-%                     write('1 - Damagier, 2 - Helper, 3 - Tank'), nl,
-%                     read(Alternative),
-%                     next_step_type(1).
-
-%----------------------%
-
-next_step_type(1) :- write('And how you would like to face your enemies?'), nl,
-                     write('1 - Physical damage, 2 - Magical damage, 3 - Mixed damage'), nl,
-                     read(Alternative),
-                     profile:set(1, [damage_type(Alternative)]), nl, nl, nl,
-                     analyze_profile(1).
-
-
-%----------------------%
-
-
-
-
-% Exemplo de como achar um champion baseado nas respostas
-analyze_profile(1) :- profile(1, experience(A)),
-                    profile(1, damage_type(B)),
-                    find_champion(A, B).
-
-find_champion(A, B) :- champion_by_type_of_damage(X,A,B),
-                       length(X, X_Length),
-                       write_champion(X_Length, X).
-
-write_champion(0, _) :- write('Sorry :/, we could not find a champion for you').
-write_champion(_, List) :- write('These champions fit rigth for you'), nl,
-                           write(List).
-
-champion_by_type_of_damage(Champions_Found, A, 1) :- findall(X,champion(X, _, physical, A, _), Champions_Found).
-champion_by_type_of_damage(Champions_Found, A, 2) :- findall(X,champion(X, _, magic, A, _), Champions_Found).
-champion_by_type_of_damage(Champions_Found, A, 3) :- findall(X,champion(X, _, mixed, A, _), Champions_Found).
-
 
 % usa habilidades
-% EstiloDano 0 - 100, sendo 0 um campeão que só usa ataque básico e 100 que só
 % campeao(Nome, Primario, Tipo, Dificuldade, Honra)
+% Honor 1 - justice, 2 - strength, 3 - neutral
 
+honor_types(justice, strength, neutral).
+
+% adcarries ranged
+champion(lucian, marksman, physical, 2, justice).
+champion(kogmaw, marksman, mixed, 2, strength).
+champion(graves, marksman, physical, 2, strength).
+champion(jhin, marksman, physical, 2, strength).
+champion(jinx, marksman, physical, 2, strength).
+champion(caitlyin, marksman, physical, 1, justice).
 champion(ashe, marksman, physical, 1, justice).
 champion(corki, marksman, mixed, 2, justice).
 champion(kalista, marksman, physical, 3, strength).
+champion(draven, marksman, physical, 3, strength).
 
+% junglers
+champion(kindred, marksman, physical, 2, justice).
 champion(amumu, vanguard, magic, 1, neutral).
 champion(shaco, assassin, physical, 2, strength).
 champion('lee sin', diver, physical, 3, justice).
+champion('jarvan IV', diver, physical, 1, justice).
+champion(elise, diver, magic, 3, strength).
+champion(evelynn, diver, magic, 2, strength).
+champion(nocturne, diver, physical, 1, strength).
+champion(warwick, diver, mixed, 1, strength).
+champion(vi, diver, physical, 1, justice).
 
+% controllers
 champion(janna, enchanter, magic, 1, justice).
+champion(karma, enchanter, magic, 1, justice).
+champion(bardo, enchanter, magic, 3, justice).
+champion(soraka, enchanter, magic, 1, justice).
+champion(sona, enchanter, magic, 1, justice).
+champion(nami, enchanter, magic, 2, neutral).
+champion(taric, enchanter, magic, 2, justice).
+champion(leona, vanguard, magic, 1, justice).
 champion(lulu, enchanter, magic, 2, neutral).
 champion(thresh, warden, magic, 3, strength).
+
+% mid
+% champion(kayle, marksman, mixed, 2, justice).
+
 
 % Vanguard: starter, ex: Malphite
 % Warden: protect ex: Shen
@@ -109,3 +93,70 @@ marksman(X) :- champion(X, marksman, _, _, _).
 strength(X) :-  champion(X, _, _, _, strength).
 justice(X) :- champion(X, _, _, _, justice).
 neutral(X) :- champion(X, _, _, _, neutral).
+
+
+
+play :-	write('Welcome to summoner\'s rift '), nl, nl, nl,
+  write('We\'ll try to find the perfect champion for you.'), nl,
+  write('First,'), nl,
+  write('How experienced are you with league of legends?'), nl,
+  write('1 - Beginner, 2 - Average, 3 - Experienced'), nl,
+  read(Alternative),
+  profile:set(1, [experience(Alternative)]), nl, nl, nl,
+  next_step_type(1).
+
+%----------------------%
+% next_step_exp(1) :- write('What is your type of game?'), nl,
+%                     write('1 - Damagier, 2 - Helper, 3 - Tank'), nl,
+%                     read(Alternative),
+%                     next_step_type(1).
+
+%----------------------%
+
+next_step_type(1) :- write('And how you would like to face your enemies?'), nl,
+                     write('1 - Physical damage, 2 - Magical damage, 3 - Mixed damage'), nl,
+                     read(Alternative),
+                     profile:set(1, [damage_type(Alternative)]), nl, nl, nl,
+                     next_step_honor(1).
+
+
+%----------------------%
+
+
+%----------------------%
+
+next_step_honor(1) :- write('And what kind of honor you prefer?'), nl,
+                   write('1 - Justice, 2 - Strength, 3 - Neutral'), nl,
+                   read(Alternative),
+                   profile:set(1, [honor_type(Alternative)]), nl, nl, nl,
+                   analyze_profile(1).
+
+
+%----------------------%
+
+
+
+% Exemplo de como achar um champion baseado nas respostas
+analyze_profile(1) :- profile(1, experience(A)),
+                    profile(1, damage_type(B)),
+                    profile(1, honor_type(C)),
+                    find_champion(A, B, C).
+
+find_champion(A, B, C) :- champion_honor(Honor,C),
+                          champion_by_type_of_damage(X,A,B,Honor),
+                          length(X, X_Length),
+                          write_champion(X_Length, X).
+
+write_champion(0, _) :- write('Sorry :/, we could not find a champion for you').
+write_champion(_, List) :- write('These champions fit rigth for you'), nl,
+                           write(List).
+
+
+champion_honor(Honor_Selected, 1) :- honor_types(Honor_Selected, _, _).
+champion_honor(Honor_Selected, 2) :- honor_types(_, Honor_Selected, _).
+champion_honor(Honor_Selected, 3) :- honor_types(_, _, Honor_Selected).
+
+
+champion_by_type_of_damage(Champions_Found, A, 1, C) :- findall(X,champion(X, _, physical, A, C), Champions_Found).
+champion_by_type_of_damage(Champions_Found, A, 2, C) :- findall(X,champion(X, _, magic, A, C), Champions_Found).
+champion_by_type_of_damage(Champions_Found, A, 3, C) :- findall(X,champion(X, _, mixed, A, C), Champions_Found).
