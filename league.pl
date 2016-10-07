@@ -93,14 +93,14 @@ neutral(X) :- champion(X, _, _, _, neutral).
 
 
 
-play :-	write('Welcome to summoner\'s rift '), nl, nl, nl,
+play :- write('Welcome to summoner\'s rift '), nl, nl, nl,
   write('We\'ll try to find the perfect champion for you.'), nl,
   write('First,'), nl,
   write('How experienced are you with league of legends?'), nl,
   write('1 - Beginner, 2 - Average, 3 - Experienced'), nl,
   read(Alternative),
   profile:set(1, [experience(Alternative)]), nl, nl, nl,
-  next_step_type(1).
+  next_step_honor(1).
 
 %----------------------%
 % next_step_exp(1) :- write('What is your type of game?'), nl,
@@ -110,26 +110,41 @@ play :-	write('Welcome to summoner\'s rift '), nl, nl, nl,
 
 %----------------------%
 
-next_step_type(1) :- write('And how you would like to face your enemies?'), nl,
-                     write('1 - Physical damage, 2 - Magical damage, 3 - Mixed damage'), nl,
-                     read(Alternative),
-                     profile:set(1, [damage_type(Alternative)]), nl, nl, nl,
-                     next_step_honor(1).
-
-
-%----------------------%
-
-
-%----------------------%
-
 next_step_honor(1) :- write('And what kind of honor you prefer?'), nl,
                    write('1 - Justice, 2 - Strength, 3 - Neutral'), nl,
                    read(Alternative),
                    profile:set(1, [honor_type(Alternative)]), nl, nl, nl,
-                   analyze_profile(1).
+                   next_step_type(1).
 
+
+next_step_type(1) :- write('And how you would like to face your enemies?'), nl,
+                     write('1 - Physical damage, 2 - Magical damage, 3 - Mixed damage'), nl,
+                     read(Alternative),
+                     profile:set(1, [damage_type(Alternative)]), nl, nl, nl,
+                     choice_damage(Alternative).
+
+
+choice_damage(1) :- next_step_physical_resistence(1).
+choice_damage(2) :- next_step_magical_resistence(1).
+choice_damage(3) :- next_step_mixed_resistence(1).
+
+next_step_physical_resistence(1) :- write('And how would you prefer?'), nl,
+                     write('1 - Physical damage with resistence , 2 - Physical damage squishy'), nl,
+                     read(Alternative),
+                     choice_resistence(Alternative).
+
+choice_resistence(1) :- profile:set(1, [champion_class(0)]), nl, nl, nl,
+                        analyze_profile(1).
+choice_resistence(2) :- next_step_range(1).
+
+next_step_range(1) :- write('And how would prefer?'), nl,
+                     write('1 - Melee , 2 - Long Distance '), nl,
+                     read(Alternative),
+                     profile:set(1, [champion_class(Alternative)]), nl, nl, nl,
+                     analyze_profile(1).
 
 %----------------------%
+
 
 
 
@@ -137,11 +152,14 @@ next_step_honor(1) :- write('And what kind of honor you prefer?'), nl,
 analyze_profile(1) :- profile(1, experience(Experience)),
                       profile(1, damage_type(Damage_Type)),
                       profile(1, honor_type(Honor_Type)),
-                      find_champion(Experience, Damage_Type, Honor_Type).
+                      profile(1, champion_class(Champion_Class)),
+                      find_champion(Experience, Damage_Type, Honor_Type, Champion_Class).
 
-find_champion(Experience, Damage_Type, Honor_Type) :- champion_honor(Honor, Honor_Type),
+find_champion(Experience, Damage_Type, Honor_Type, Champion_Class) :- 
+																											champion_honor(Honor, Honor_Type),
                                                       champion_damage(Damage, Damage_Type),
-                                                      champion_by_profile(Champions_Found, Experience, Damage, Honor),
+																											champion_physical_class(Class, Champion_Class),
+                                                      champion_by_profile(Champions_Found, Experience, Damage, Honor, Class),
                                                       length(Champions_Found, Champions_Found_Length),
                                                       write_champion(Champions_Found_Length, Champions_Found).
 
@@ -156,14 +174,20 @@ champion_honor(Honor_Selected, 1) :- honor_types(Honor_Selected, _, _).
 champion_honor(Honor_Selected, 2) :- honor_types(_, Honor_Selected, _).
 champion_honor(Honor_Selected, 3) :- honor_types(_, _, Honor_Selected).
 
-% Damage 1 - justice, 2 - strength, 3 - neutral
+% Damage 1 - physical , 2 - magic, 3 - mixed
 damage_types(physical, magic, mixed).
 champion_damage(Damage_Selected, 1) :- damage_types(Damage_Selected, _, _).
 champion_damage(Damage_Selected, 2) :- damage_types(_, Damage_Selected, _).
 champion_damage(Damage_Selected, 3) :- damage_types(_, _, Damage_Selected).
 
-champion_by_profile(Champions_Found, Experience, Damage_Type, Honor) :- findall(
+% Physical Resistence  1 - diver , 2 - squishy
+physical_class(diver , skimisher, marksman).
+champion_physical_class(Class_Selected, 0) :- physical_class(Class_Selected, _, _).
+champion_physical_class(Class_Selected, 1) :- physical_class(_, Class_Selected, _).
+champion_physical_class(Class_Selected, 2) :- physical_class(_, _, Class_Selected).
+
+champion_by_profile(Champions_Found, Experience, Damage_Type, Honor, Class) :- findall(
                                                                                   X,
-                                                                                  champion(X, _, Damage_Type, Experience, Honor),
+                                                                                  champion(X, Class, Damage_Type, Experience, Honor),
                                                                                   Champions_Found
                                                                                 ).
