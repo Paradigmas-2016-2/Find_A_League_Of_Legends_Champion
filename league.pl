@@ -53,43 +53,17 @@ champion(lulu, enchanter, magic, 2, neutral).
 champion(thresh, warden, magic, 3, strength).
 
 % mid
-% champion(kayle, marksman, mixed, 2, justice).
+champion(kayle, marksman, mixed, 2, justice).
+champion(ahri, burst, magical, 2, justice).
+champion(anivia, disruptor, magical, 3, justice).
+champion(annie, burst, magical, 1, neutral).
+champion(katarina, assassin, magical, 1, strength).
+champion(veigar, burst, magical, 2, strength).
+champion(swain, battlemage, magical, 2, strength).
+champion(yasuo, assassin, physical, 3, justice).
+champion(ryze, battlemage, magical, 2, justice).
+champion(lulu, enchanter, magical, 2, neutral).
 
-
-% Vanguard: starter, ex: Malphite
-% Warden: protect ex: Shen
-tank(X) :- champion(X, vanguard, _, _, _);
-           champion(X, warden, _, _, _).
-
-% Juggernaut: more tank than damage ex: Nasus
-% Diver: more damage than tank ex: Xin Zhao
-fighter(X) :- champion(X, juggernaut, _, _, _);
-              champion(X, diver, _, _, _).
-
-% Assassin: have high mobility, escape and burst damage ex: Zed
-% Skirmisher: don't have escape but have burst damage ex: Fiora
-slayer(X) :- champion(X, assassins, _, _, _);
-             champion(X, skirmisher, _, _, _).
-
-% Burst: have only burst damage ex: Veigar
-% Battle: have some tons of damage, and have a average resistence ex: Vladimir
-% Artillery: have so much damage in poke ex: Ziggs
-mage(X) :- champion(X, burst, _, _, _);
-           champion(X, battle, _, _, _);
-           champion(X, artillery, _, _, _).
-
-% Enchanter: controllers that amplify allies ex: lulu
-% Disruptor: controllers that snared enemies ex: Zyra
-controller(X) :- champion(X, enchanter, _, _, _);
-                 champion(X, disruptor, _, _, _).
-
-% Marksman: Champions that have a lot of damaged, and have so much range ex: Ashe
-marksman(X) :- champion(X, marksman, _, _, _).
-
-% Type of Honor
-strength(X) :-  champion(X, _, _, _, strength).
-justice(X) :- champion(X, _, _, _, justice).
-neutral(X) :- champion(X, _, _, _, neutral).
 
 
 
@@ -137,11 +111,43 @@ choice_resistence(1) :- profile:set(1, [champion_class(0)]), nl, nl, nl,
                         analyze_profile(1).
 choice_resistence(2) :- next_step_range(1).
 
+
 next_step_range(1) :- write('And how would prefer?'), nl,
-                     write('1 - Melee , 2 - Long Distance '), nl,
+                     write('1 - Melee , 2 - Long Distance'), nl,
+                     read(Alternative),
+                     choice_range(Alternative).
+
+choice_range(1) :- next_step_escape(1).
+choice_range(2) :- profile:set(1, [champion_class(3)]), nl, nl, nl,
+                          analyze_profile(1).
+
+
+next_step_escape(1) :- write('And how would prefer?'), nl,
+                     write('1 - Melee without escape, and high durability in fight , 2 - Melee with escape, but one focus'), nl,
                      read(Alternative),
                      profile:set(1, [champion_class(Alternative)]), nl, nl, nl,
                      analyze_profile(1).
+
+
+%-----------------------%
+
+
+next_step_mixed_resistence(1) :- write('And how would you prefer?'), nl,
+                     write('1 - Mixed damage with resistence , 2 - Mixed damage squishy'), nl,
+                     read(Alternative),
+                     choice_resistence(Alternative).
+
+
+%----------------------%
+
+%-----------------------%
+
+
+next_step_magical_resistence(1) :- write('And how would you prefer?'), nl,
+                     write('1 - Magical damage with resistence , 2 - Magical damage squishy'), nl,
+                     read(Alternative),
+                     choice_resistence(Alternative).
+
 
 %----------------------%
 
@@ -153,9 +159,12 @@ analyze_profile(1) :- profile(1, experience(Experience)),
                       profile(1, damage_type(Damage_Type)),
                       profile(1, honor_type(Honor_Type)),
                       profile(1, champion_class(Champion_Class)),
-                      find_champion(Experience, Damage_Type, Honor_Type, Champion_Class).
+                      find_champion_physical(Experience, Damage_Type, Honor_Type, Champion_Class).
 
-find_champion(Experience, Damage_Type, Honor_Type, Champion_Class) :- 
+find_champion_option(Experience, 1, Honor_Type, Champion_Class) :- find_champion_physical(Experience, 1, Honor_Type, Champion_Class).
+find_champion_option(Experience, 3, Honor_Type, Champion_Class) :- find_champion_mixed(Experience, 3, Honor_Type, Champion_Class).
+
+find_champion_physical(Experience, Damage_Type, Honor_Type, Champion_Class) :- 
 																											champion_honor(Honor, Honor_Type),
                                                       champion_damage(Damage, Damage_Type),
 																											champion_physical_class(Class, Champion_Class),
@@ -163,6 +172,14 @@ find_champion(Experience, Damage_Type, Honor_Type, Champion_Class) :-
                                                       length(Champions_Found, Champions_Found_Length),
                                                       write_champion(Champions_Found_Length, Champions_Found).
 
+
+find_champion_mixed(Experience, Damage_Type, Honor_Type, Champion_Class) :- 
+                                                      champion_honor(Honor, Honor_Type),
+                                                      champion_damage(Damage, Damage_Type),
+                                                      champion_mixed_class(Class, Champion_Class),
+                                                      champion_by_profile(Champions_Found, Experience, Damage, Honor, Class),
+                                                      length(Champions_Found, Champions_Found_Length),
+                                                      write_champion(Champions_Found_Length, Champions_Found).
 
 write_champion(0, _) :- write('Sorry :/, we could not find a champion for you').
 write_champion(_, List) :- write('These champions fit rigth for you'), nl,
@@ -180,11 +197,19 @@ champion_damage(Damage_Selected, 1) :- damage_types(Damage_Selected, _, _).
 champion_damage(Damage_Selected, 2) :- damage_types(_, Damage_Selected, _).
 champion_damage(Damage_Selected, 3) :- damage_types(_, _, Damage_Selected).
 
-% Physical Resistence  1 - diver , 2 - squishy
-physical_class(diver , skimisher, marksman).
-champion_physical_class(Class_Selected, 0) :- physical_class(Class_Selected, _, _).
-champion_physical_class(Class_Selected, 1) :- physical_class(_, Class_Selected, _).
-champion_physical_class(Class_Selected, 2) :- physical_class(_, _, Class_Selected).
+% Physical Class  0- diver , 1- skimisher, 2- assassin, 3- marksman
+physical_class(diver , skimisher, assassin, marksman).
+champion_physical_class(Class_Selected, 0) :- physical_class(Class_Selected, _, _, _).
+champion_physical_class(Class_Selected, 1) :- physical_class(_, Class_Selected, _, _).
+champion_physical_class(Class_Selected, 2) :- physical_class(_, _, Class_Selected, _).
+champion_physical_class(Class_Selected, 3) :- physical_class(_, _, _, Class_Selected).
+
+% Mixed Class  0- diver , 1- skimisher, 2- assassin, 3- marksman
+mixed_class(diver , skimisher, assassin, marksman).
+champion_mixed_class(Class_Selected, 0) :- mixed_class(Class_Selected, _, _, _).
+champion_mixed_class(Class_Selected, 1) :- mixed_class(_, Class_Selected, _, _).
+champion_mixed_class(Class_Selected, 2) :- mixed_class(_, _, Class_Selected, _).
+champion_mixed_class(Class_Selected, 3) :- mixed_class(_, _, _, Class_Selected).
 
 champion_by_profile(Champions_Found, Experience, Damage_Type, Honor, Class) :- findall(
                                                                                   X,
