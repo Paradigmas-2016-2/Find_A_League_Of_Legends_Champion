@@ -15,9 +15,6 @@ drop(ID) :- retractall(profile(ID, _)).
 
 % usa habilidades
 % campeao(Nome, Primario, Tipo, Dificuldade, Honra)
-% Honor 1 - justice, 2 - strength, 3 - neutral
-
-honor_types(justice, strength, neutral).
 
 % adcarries ranged
 champion(lucian, marksman, physical, 2, justice).
@@ -137,26 +134,36 @@ next_step_honor(1) :- write('And what kind of honor you prefer?'), nl,
 
 
 % Exemplo de como achar um champion baseado nas respostas
-analyze_profile(1) :- profile(1, experience(A)),
-                    profile(1, damage_type(B)),
-                    profile(1, honor_type(C)),
-                    find_champion(A, B, C).
+analyze_profile(1) :- profile(1, experience(Experience)),
+                      profile(1, damage_type(Damage_Type)),
+                      profile(1, honor_type(Honor_Type)),
+                      find_champion(Experience, Damage_Type, Honor_Type).
 
-find_champion(A, B, C) :- champion_honor(Honor,C),
-                          champion_by_type_of_damage(X,A,B,Honor),
-                          length(X, X_Length),
-                          write_champion(X_Length, X).
+find_champion(Experience, Damage_Type, Honor_Type) :- champion_honor(Honor, Honor_Type),
+                                                      champion_damage(Damage, Damage_Type),
+                                                      champion_by_profile(Champions_Found, Experience, Damage, Honor),
+                                                      length(Champions_Found, Champions_Found_Length),
+                                                      write_champion(Champions_Found_Length, Champions_Found).
+
 
 write_champion(0, _) :- write('Sorry :/, we could not find a champion for you').
 write_champion(_, List) :- write('These champions fit rigth for you'), nl,
                            write(List).
 
-
+% Honor 1 - justice, 2 - strength, 3 - neutral
+honor_types(justice, strength, neutral).
 champion_honor(Honor_Selected, 1) :- honor_types(Honor_Selected, _, _).
 champion_honor(Honor_Selected, 2) :- honor_types(_, Honor_Selected, _).
 champion_honor(Honor_Selected, 3) :- honor_types(_, _, Honor_Selected).
 
+% Damage 1 - justice, 2 - strength, 3 - neutral
+damage_types(physical, magic, mixed).
+champion_damage(Damage_Selected, 1) :- damage_types(Damage_Selected, _, _).
+champion_damage(Damage_Selected, 2) :- damage_types(_, Damage_Selected, _).
+champion_damage(Damage_Selected, 3) :- damage_types(_, _, Damage_Selected).
 
-champion_by_type_of_damage(Champions_Found, A, 1, C) :- findall(X,champion(X, _, physical, A, C), Champions_Found).
-champion_by_type_of_damage(Champions_Found, A, 2, C) :- findall(X,champion(X, _, magic, A, C), Champions_Found).
-champion_by_type_of_damage(Champions_Found, A, 3, C) :- findall(X,champion(X, _, mixed, A, C), Champions_Found).
+champion_by_profile(Champions_Found, Experience, Damage_Type, Honor) :- findall(
+                                                                                  X,
+                                                                                  champion(X, _, Damage_Type, Experience, Honor),
+                                                                                  Champions_Found
+                                                                                ).
